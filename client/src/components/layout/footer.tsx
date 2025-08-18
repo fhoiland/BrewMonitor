@@ -1,4 +1,4 @@
-import { Beer, Instagram, Youtube, Github, Heart } from "lucide-react";
+import { Beer, Instagram, Youtube, Github, Heart, Shield } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Footer() {
@@ -25,16 +25,16 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/">
-                  <a className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors">
+                  <span className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors cursor-pointer">
                     Hjem
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link href="/blog">
-                  <a className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors">
+                  <span className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors cursor-pointer">
                     Blogg
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -91,9 +91,17 @@ export default function Footer() {
             <p className="text-brew-text-muted text-sm mb-4 md:mb-0 flex items-center">
               Bygget med <Heart className="h-4 w-4 text-brew-red mx-1" /> av Prefab Brew Crew
             </p>
-            <p className="text-brew-text-muted text-xs">
-              © 2024 Prefab Brew Crew. Alle rettigheter forbeholdt.
-            </p>
+            <div className="flex items-center space-x-4">
+              <Link href="/admin/login">
+                <span className="text-brew-text-muted hover:text-brew-amber text-xs transition-colors cursor-pointer flex items-center">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin
+                </span>
+              </Link>
+              <p className="text-brew-text-muted text-xs">
+                © 2024 Prefab Brew Crew. Alle rettigheter forbeholdt.
+              </p>
+            </div>
           </div>
         </div>
       </div>
