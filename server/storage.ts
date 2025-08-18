@@ -1,27 +1,157 @@
-import { type User, type InsertUser, type BrewingData, type InsertBrewingData, type BlogPost, type InsertBlogPost, type Stats, type InsertStats } from "@shared/schema";
+import {
+  users,
+  brewingData,
+  blogPosts,
+  stats,
+  type User,
+  type UpsertUser,
+  type BrewingData,
+  type BlogPost,
+  type Stats,
+  insertBrewingDataSchema,
+  insertBlogPostSchema,
+  insertStatsSchema,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
-  // User operations
+  // User operations (IMPORTANT: required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Brewing data operations
   getBrewingData(): Promise<BrewingData | undefined>;
-  updateBrewingData(data: InsertBrewingData): Promise<BrewingData>;
+  updateBrewingData(data: any): Promise<BrewingData>;
 
   // Blog operations
   getAllBlogPosts(): Promise<BlogPost[]>;
   getPublishedBlogPosts(): Promise<BlogPost[]>;
   getBlogPost(id: string): Promise<BlogPost | undefined>;
-  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
-  updateBlogPost(id: string, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  createBlogPost(post: any): Promise<BlogPost>;
+  updateBlogPost(id: string, post: any): Promise<BlogPost | undefined>;
   deleteBlogPost(id: string): Promise<boolean>;
 
   // Stats operations
   getStats(): Promise<Stats | undefined>;
-  updateStats(stats: InsertStats): Promise<Stats>;
+  updateStats(stats: any): Promise<Stats>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // User operations (IMPORTANT: required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Brewing data operations
+  async getBrewingData(): Promise<BrewingData | undefined> {
+    const [data] = await db.select().from(brewingData).limit(1);
+    return data;
+  }
+
+  async updateBrewingData(data: any): Promise<BrewingData> {
+    const existingData = await this.getBrewingData();
+    if (existingData) {
+      const [updated] = await db
+        .update(brewingData)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(brewingData.id, existingData.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(brewingData)
+        .values({ id: randomUUID(), ...data, updatedAt: new Date() })
+        .returning();
+      return created;
+    }
+  }
+
+  // Blog operations
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return await db.select().from(blogPosts).orderBy(blogPosts.createdAt);
+  }
+
+  async getPublishedBlogPosts(): Promise<BlogPost[]> {
+    return await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.published, true))
+      .orderBy(blogPosts.createdAt);
+  }
+
+  async getBlogPost(id: string): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, id));
+    return post;
+  }
+
+  async createBlogPost(post: any): Promise<BlogPost> {
+    const [created] = await db
+      .insert(blogPosts)
+      .values({
+        id: randomUUID(),
+        ...post,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return created;
+  }
+
+  async updateBlogPost(id: string, post: any): Promise<BlogPost | undefined> {
+    const [updated] = await db
+      .update(blogPosts)
+      .set({ ...post, updatedAt: new Date() })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBlogPost(id: string): Promise<boolean> {
+    const result = await db.delete(blogPosts).where(eq(blogPosts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Stats operations
+  async getStats(): Promise<Stats | undefined> {
+    const [data] = await db.select().from(stats).limit(1);
+    return data;
+  }
+
+  async updateStats(statsData: any): Promise<Stats> {
+    const existingStats = await this.getStats();
+    if (existingStats) {
+      const [updated] = await db
+        .update(stats)
+        .set({ ...statsData, updatedAt: new Date() })
+        .where(eq(stats.id, existingStats.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(stats)
+        .values({ id: randomUUID(), ...statsData, updatedAt: new Date() })
+        .returning();
+      return created;
+    }
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -211,4 +341,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
