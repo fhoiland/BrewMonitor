@@ -39,16 +39,26 @@ interface Stats {
 }
 
 export default function Home() {
-  const { data: brewingData, isLoading: brewingLoading } = useQuery<BrewingData>({
+  const { data: brewingData, isLoading: brewingLoading, error: brewingError } = useQuery<BrewingData>({
     queryKey: ["/api/brewing-data"],
   });
 
-  const { data: blogPosts, isLoading: blogLoading } = useQuery<BlogPost[]>({
+  const { data: blogPosts, isLoading: blogLoading, error: blogError } = useQuery<BlogPost[]>({
     queryKey: ["/api/blog-posts"],
   });
 
-  const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<Stats>({
     queryKey: ["/api/stats"],
+  });
+
+  // Debug logging
+  console.log('Home component data:', { 
+    blogPosts, 
+    blogLoading, 
+    blogError,
+    brewingData,
+    brewingLoading,
+    brewingError 
   });
 
 
@@ -101,10 +111,22 @@ export default function Home() {
                   </div>
                 ))}
               </>
-            ) : (
-              blogPosts?.slice(0, 3).map((post) => (
-                <BlogCard key={post.id} post={post} />
+            ) : blogError ? (
+              <div className="col-span-3 text-center p-8">
+                <p className="text-red-400">Feil ved lasting av blogg: {blogError.message}</p>
+              </div>
+            ) : blogPosts && blogPosts.length > 0 ? (
+              blogPosts.slice(0, 3).map((post) => (
+                <div key={post.id} className="bg-white p-4 rounded border">
+                  <h3 className="text-black font-bold">{post.title}</h3>
+                  <p className="text-gray-600">{post.summary}</p>
+                  <small className="text-gray-400">ID: {post.id}</small>
+                </div>
               ))
+            ) : (
+              <div className="col-span-3 text-center p-8">
+                <p className="text-brew-text-muted">Ingen blogginnlegg funnet</p>
+              </div>
             )}
           </div>
           
