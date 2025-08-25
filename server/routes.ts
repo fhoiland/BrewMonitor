@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { authenticateToken, generateToken, asAuthRequest, type AuthRequest } from "./middleware/auth";
 import { insertUserSchema, insertBrewingDataSchema, insertBlogPostSchema, insertStatsSchema } from "@shared/schema";
 import { generateBlogPost } from "./services/openai";
+import { raptApi } from "./rapt-api";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(cookieParser());
@@ -83,6 +84,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public brewing data routes
   app.get("/api/brewing-data", async (req, res) => {
     try {
+      // Try RAPT API first if configured
+      if (process.env.RAPT_USERNAME && process.env.RAPT_API_SECRET) {
+        try {
+          const raptData = await raptApi.fetchBrewingData({
+            username: process.env.RAPT_USERNAME,
+            apiSecret: process.env.RAPT_API_SECRET
+          });
+          return res.json(raptData);
+        } catch (error) {
+          console.log('RAPT API failed, falling back to database:', error.message);
+        }
+      }
+      
+      // Fallback to database data  
       const data = await storage.getBrewingData();
       res.json(data);
     } catch (error) {
