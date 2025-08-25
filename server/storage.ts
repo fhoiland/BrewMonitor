@@ -1,8 +1,4 @@
 import {
-  users,
-  brewingData,
-  blogPosts,
-  stats,
   type User,
   type InsertUser,
   type BrewingData,
@@ -11,12 +7,8 @@ import {
   type InsertBlogPost,
   type Stats,
   type InsertStats,
-  insertBrewingDataSchema,
-  insertBlogPostSchema,
-  insertStatsSchema,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { supabaseRequest } from "./db";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -43,135 +35,144 @@ export interface IStorage {
   updateStats(stats: any): Promise<Stats>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   // User operations (IMPORTANT: required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const users = await supabaseRequest(`users?id=eq.${id}`);
+    return users[0] || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    const users = await supabaseRequest(`users?username=eq.${username}`);
+    return users[0] || undefined;
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values({
-        id: randomUUID(),
-        ...userData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
-    return user;
+    const user = {
+      id: randomUUID(),
+      ...userData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const [created] = await supabaseRequest('users', {
+      method: 'POST',
+      body: JSON.stringify(user),
+    });
+    return created;
   }
 
   async upsertUser(userData: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.username,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+    const user = {
+      ...userData,
+      updated_at: new Date().toISOString(),
+    };
+    const [upserted] = await supabaseRequest(`users?username=eq.${userData.username}`, {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(user),
+    });
+    return upserted;
   }
 
   // Brewing data operations
   async getBrewingData(): Promise<BrewingData | undefined> {
-    const [data] = await db.select().from(brewingData).limit(1);
-    return data;
+    const data = await supabaseRequest('brewing_data?limit=1');
+    return data[0] || undefined;
   }
 
   async updateBrewingData(data: any): Promise<BrewingData> {
     const existingData = await this.getBrewingData();
+    const brewingData = {
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
+    
     if (existingData) {
-      const [updated] = await db
-        .update(brewingData)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(brewingData.id, existingData.id))
-        .returning();
+      const [updated] = await supabaseRequest(`brewing_data?id=eq.${existingData.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(brewingData),
+      });
       return updated;
     } else {
-      const [created] = await db
-        .insert(brewingData)
-        .values({ id: randomUUID(), ...data, updatedAt: new Date() })
-        .returning();
+      const [created] = await supabaseRequest('brewing_data', {
+        method: 'POST',
+        body: JSON.stringify({ id: randomUUID(), ...brewingData }),
+      });
       return created;
     }
   }
 
   // Blog operations
   async getAllBlogPosts(): Promise<BlogPost[]> {
-    return await db.select().from(blogPosts).orderBy(blogPosts.createdAt);
+    return await supabaseRequest('blog_posts?order=created_at.desc');
   }
 
   async getPublishedBlogPosts(): Promise<BlogPost[]> {
-    return await db
-      .select()
-      .from(blogPosts)
-      .where(eq(blogPosts.published, true))
-      .orderBy(blogPosts.createdAt);
+    return await supabaseRequest('blog_posts?published=eq.true&order=created_at.desc');
   }
 
   async getBlogPost(id: string): Promise<BlogPost | undefined> {
-    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, id));
-    return post;
+    const posts = await supabaseRequest(`blog_posts?id=eq.${id}`);
+    return posts[0] || undefined;
   }
 
   async createBlogPost(post: any): Promise<BlogPost> {
-    const [created] = await db
-      .insert(blogPosts)
-      .values({
-        id: randomUUID(),
-        ...post,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
+    const blogPost = {
+      id: randomUUID(),
+      ...post,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const [created] = await supabaseRequest('blog_posts', {
+      method: 'POST',
+      body: JSON.stringify(blogPost),
+    });
     return created;
   }
 
   async updateBlogPost(id: string, post: any): Promise<BlogPost | undefined> {
-    const [updated] = await db
-      .update(blogPosts)
-      .set({ ...post, updatedAt: new Date() })
-      .where(eq(blogPosts.id, id))
-      .returning();
-    return updated;
+    const blogPost = {
+      ...post,
+      updated_at: new Date().toISOString(),
+    };
+    const updated = await supabaseRequest(`blog_posts?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(blogPost),
+    });
+    return updated[0] || undefined;
   }
 
   async deleteBlogPost(id: string): Promise<boolean> {
-    const result = await db.delete(blogPosts).where(eq(blogPosts.id, id));
-    return (result.rowCount || 0) > 0;
+    await supabaseRequest(`blog_posts?id=eq.${id}`, {
+      method: 'DELETE',
+    });
+    return true;
   }
 
   // Stats operations
   async getStats(): Promise<Stats | undefined> {
-    const [data] = await db.select().from(stats).limit(1);
-    return data;
+    const data = await supabaseRequest('stats?limit=1');
+    return data[0] || undefined;
   }
 
   async updateStats(statsData: any): Promise<Stats> {
     const existingStats = await this.getStats();
+    const stats = {
+      ...statsData,
+      updated_at: new Date().toISOString(),
+    };
+    
     if (existingStats) {
-      const [updated] = await db
-        .update(stats)
-        .set({ ...statsData, updatedAt: new Date() })
-        .where(eq(stats.id, existingStats.id))
-        .returning();
+      const [updated] = await supabaseRequest(`stats?id=eq.${existingStats.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(stats),
+      });
       return updated;
     } else {
-      const [created] = await db
-        .insert(stats)
-        .values({ id: randomUUID(), ...statsData, updatedAt: new Date() })
-        .returning();
+      const [created] = await supabaseRequest('stats', {
+        method: 'POST',
+        body: JSON.stringify({ id: randomUUID(), ...stats }),
+      });
       return created;
     }
   }
@@ -393,4 +394,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new SupabaseStorage();

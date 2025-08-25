@@ -1,15 +1,25 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as schema from "@shared/schema";
+// Supabase REST API configuration
+export const supabase = {
+  url: 'https://ahembadjzomvymqrujto.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoZW1iYWRqem9tdnltcXJ1anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMjQ3NzgsImV4cCI6MjA3MTcwMDc3OH0.w95g_j5SzM3ltI7DKEoE0D0R9dcGNFjlU2Jo6o0S2uM'
+};
 
-neonConfig.webSocketConstructor = ws;
+// Helper function for Supabase REST API calls
+export async function supabaseRequest(endpoint: string, options: RequestInit = {}) {
+  const response = await fetch(`${supabase.url}/rest/v1/${endpoint}`, {
+    ...options,
+    headers: {
+      'apikey': supabase.key,
+      'Authorization': `Bearer ${supabase.key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...options.headers,
+    },
+  });
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  if (!response.ok) {
+    throw new Error(`Supabase API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
 }
-
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
