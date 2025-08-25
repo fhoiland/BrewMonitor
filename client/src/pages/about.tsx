@@ -35,9 +35,9 @@ export default function About() {
         </div>
 
         {/* Contact Section */}
-        <div className="text-center bg-gradient-to-r from-brew-amber/10 to-brew-amber/5 border border-brew-amber/20 rounded-lg p-12">
+        <div className="text-center bg-gradient-to-r from-brew-amber/10 to-brew-amber/5 border border-brew-border rounded-lg p-12">
           <h2 className="text-3xl font-headline font-bold mb-6">
-            Bli med oss
+            Kontakt oss
           </h2>
           <p className="text-xl text-brew-text-muted mb-8 max-w-2xl mx-auto">
             Har du lyst til å være med på bryggeeventyret? Ta kontakt!
