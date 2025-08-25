@@ -2,14 +2,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "functions": {
-    "server/index.ts": {
+    "dist/index.js": {
       "runtime": "@vercel/node@3.0.7"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/server/index.ts"
+      "destination": "/dist/index.js"
     },
     {
       "source": "/(.*)",
