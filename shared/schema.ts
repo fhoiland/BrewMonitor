@@ -4,7 +4,6 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 export const sessions = pgTable(
   "sessions",
   {
@@ -15,11 +14,10 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+// Users
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").unique(), // bevisst ikke .notNull() => valgfri ved insert
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -27,6 +25,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Brewing data
 export const brewingData = pgTable("brewing_data", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   kettleTemperature: real("kettle_temperature").notNull(),
@@ -43,6 +42,7 @@ export const brewingData = pgTable("brewing_data", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Blog posts
 export const blogPosts = pgTable("blog_posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -54,6 +54,7 @@ export const blogPosts = pgTable("blog_posts", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Stats
 export const stats = pgTable("stats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   totalBatches: integer("total_batches").notNull(),
@@ -63,9 +64,16 @@ export const stats = pgTable("stats", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+// ---------- Zod / drizzle-zod schemas ----------
 
+// NEW: users insert schema (manglet før)
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// existing
 export const insertBrewingDataSchema = createInsertSchema(brewingData).omit({
   id: true,
   updatedAt: true,
@@ -82,11 +90,16 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
   updatedAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+// ---------- Types ----------
+
 export type User = typeof users.$inferSelect;
-export type InsertBrewingData = z.infer<typeof insertBrewingDataSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
 export type BrewingData = typeof brewingData.$inferSelect;
-export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type InsertBrewingData = z.infer<typeof insertBrewingDataSchema>;
+
 export type BlogPost = typeof blogPosts.$inferSelect;
-export type InsertStats = z.infer<typeof insertStatsSchema>;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
 export type Stats = typeof stats.$inferSelect;
+export type InsertStats = z.infer<typeof insertStatsSchema>;
