@@ -21,5 +21,23 @@ export async function supabaseRequest(endpoint: string, options: RequestInit = {
     throw new Error(`Supabase API error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return transformKeys(data);
+}
+
+// Convert snake_case to camelCase for frontend compatibility
+function transformKeys(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(transformKeys);
+  }
+  
+  if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result, key) => {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      result[camelKey] = transformKeys(obj[key]);
+      return result;
+    }, {} as any);
+  }
+  
+  return obj;
 }

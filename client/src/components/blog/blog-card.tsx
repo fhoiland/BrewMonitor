@@ -46,9 +46,9 @@ export default function BlogCard({ post }: BlogCardProps) {
             {formatDate(post.createdAt)}
           </span>
           <Link href={`/blog/${post.id}`}>
-            <a className="text-brew-amber hover:text-brew-amber-light transition-colors font-medium text-sm flex items-center">
+            <span className="text-brew-amber hover:text-brew-amber-light transition-colors font-medium text-sm flex items-center cursor-pointer">
               Les mer <ArrowRight className="ml-1 h-3 w-3" />
-            </a>
+            </span>
           </Link>
         </div>
       </CardContent>
