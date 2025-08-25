@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Flame, Thermometer, Cog, Zap, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useBrewingLabels } from "@shared/brewing-config";
 
 interface BrewKettleData {
   kettleTemperature: number;
@@ -15,13 +16,15 @@ interface BrewKettleCardProps {
 }
 
 export default function BrewKettleCard({ data }: BrewKettleCardProps) {
+  const labels = useBrewingLabels();
+  
   return (
     <Card className="bg-brew-card border-brew-border">
       <CardContent className="p-6">
         <div className="flex items-center mb-6">
           <Flame className="text-brew-red text-2xl mr-3" />
           <h2 className="text-2xl font-headline font-bold text-brew-text">
-            Brew Kettle
+            {labels.brewKettle.title}
           </h2>
         </div>
         
@@ -29,7 +32,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Thermometer className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Temperatur</span>
+              <span className="text-brew-text-muted">{labels.brewKettle.temperature}</span>
             </div>
             <span className="text-2xl font-mono font-bold text-brew-text">
               {data.kettleTemperature}°C
@@ -39,7 +42,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Thermometer className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Målt Temperatur</span>
+              <span className="text-brew-text-muted">{labels.brewKettle.maltTemperature}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.maltTemperature}°C
@@ -49,7 +52,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Cog className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Modus</span>
+              <span className="text-brew-text-muted">{labels.brewKettle.mode}</span>
             </div>
             <Badge 
               className={`${
@@ -65,7 +68,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Zap className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Strøm</span>
+              <span className="text-brew-text-muted">{labels.brewKettle.power}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.power}W
@@ -75,7 +78,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Clock className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Tid GMt</span>
+              <span className="text-brew-text-muted">{labels.brewKettle.timeGMT}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.timeGMT}

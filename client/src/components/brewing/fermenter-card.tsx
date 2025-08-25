@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { FlaskConical, Beer, Thermometer, Droplets, Beaker, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useBrewingLabels } from "@shared/brewing-config";
 
 interface FermenterData {
   fermenterBeerType: string;
@@ -16,13 +17,15 @@ interface FermenterCardProps {
 }
 
 export default function FermenterCard({ data }: FermenterCardProps) {
+  const labels = useBrewingLabels();
+  
   return (
     <Card className="bg-brew-card border-brew-border">
       <CardContent className="p-6">
         <div className="flex items-center mb-6">
           <FlaskConical className="text-brew-amber text-2xl mr-3" />
           <h2 className="text-2xl font-headline font-bold text-brew-text">
-            Fermenter
+            {labels.fermenter.title}
           </h2>
         </div>
         
@@ -30,7 +33,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Beer className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Øltype</span>
+              <span className="text-brew-text-muted">{labels.fermenter.beerType}</span>
             </div>
             <span className="text-2xl font-headline font-bold text-brew-text">
               {data.fermenterBeerType}
@@ -40,7 +43,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Thermometer className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Temperatur</span>
+              <span className="text-brew-text-muted">{labels.fermenter.temperature}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.fermenterTemperature}°C
@@ -50,7 +53,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Droplets className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Gravity</span>
+              <span className="text-brew-text-muted">{labels.fermenter.gravity}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.fermenterGravity}
@@ -60,7 +63,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Beaker className="text-brew-amber mr-2 h-4 w-4" />
-              <span className="text-brew-text-muted">Totalt</span>
+              <span className="text-brew-text-muted">{labels.fermenter.total}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
               {data.fermenterTotal}
@@ -71,7 +74,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <Clock className="text-brew-amber mr-2 h-4 w-4" />
-                <span className="text-brew-text-muted">Tid igjen</span>
+                <span className="text-brew-text-muted">{labels.fermenter.timeRemaining}</span>
               </div>
               <span className="text-sm text-brew-text">
                 {data.fermenterTimeRemaining}
