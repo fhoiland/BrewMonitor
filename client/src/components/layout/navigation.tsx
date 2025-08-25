@@ -29,12 +29,15 @@ export default function Navigation() {
               </span>
             </Link>
             
-            <a 
-              href="#" 
-              className="text-brew-text-muted hover:text-brew-amber transition-colors font-medium"
-            >
-              Om oss
-            </a>
+            <Link href="/about">
+              <span className={`font-medium transition-colors cursor-pointer ${
+                location === "/about" 
+                  ? "text-brew-amber" 
+                  : "text-brew-text-muted hover:text-brew-amber"
+              }`}>
+                Om oss
+              </span>
+            </Link>
             
             <Button variant="ghost" size="sm" className="text-brew-text-muted hover:text-brew-amber">
               <Moon className="h-4 w-4" />
