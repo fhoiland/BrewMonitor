@@ -5,24 +5,26 @@ export default function Footer() {
   return (
     <footer className="border-t border-brew-border bg-brew-card/50 mt-16">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <Beer className="text-brew-amber text-xl" />
-              <span className="font-headline font-bold text-brew-text">
-                Prefab Brew Crew
-              </span>
-            </div>
-            <p className="text-brew-text-muted text-sm">
-              Brygging med passion og presisjon. Følg våre oppskrifter og tips for å lage øl av høyeste kvalitet hjemme.
-            </p>
+        {/* Logo and description centered on top */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Beer className="text-brew-amber text-xl" />
+            <span className="font-headline font-bold text-brew-text">
+              Prefab Brew Crew
+            </span>
           </div>
-          
-          <div>
+          <p className="text-brew-text-muted text-sm max-w-md mx-auto">
+            Brygging med passion og presisjon. Følg våre oppskrifter og tips for å lage øl av høyeste kvalitet hjemme.
+          </p>
+        </div>
+        
+        {/* Navigation and social links in 2 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="text-center md:text-left">
             <h4 className="font-headline font-semibold text-brew-text mb-4">
               Navigasjon
             </h4>
-            <ul className="flex flex-wrap gap-4">
+            <ul className="flex flex-wrap gap-4 justify-center md:justify-start">
               <li>
                 <Link href="/">
                   <span className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors cursor-pointer">
@@ -55,11 +57,11 @@ export default function Footer() {
             </ul>
           </div>
           
-          <div>
+          <div className="text-center md:text-right">
             <h4 className="font-headline font-semibold text-brew-text mb-4">
               Følg oss
             </h4>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-center md:justify-end">
               <a 
                 href="#" 
                 className="text-brew-text-muted hover:text-brew-amber transition-colors"
