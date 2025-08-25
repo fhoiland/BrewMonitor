@@ -8,7 +8,12 @@ export interface AuthRequest extends Request {
   user?: { id: string; username: string };
 }
 
-export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
+// Type assertion helper for authenticated routes
+export function asAuthRequest(req: Request): AuthRequest {
+  return req as AuthRequest;
+}
+
+export function authenticateToken(req: any, res: Response, next: NextFunction) {
   const token = req.cookies?.token;
 
   if (!token) {
