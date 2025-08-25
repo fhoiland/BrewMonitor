@@ -35,7 +35,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
               <span className="text-brew-text-muted">{labels.brewKettle.temperature}</span>
             </div>
             <span className="text-2xl font-mono font-bold text-brew-text">
-              {data.kettleTemperature}°C
+              {data.kettleTemperature ? `${data.kettleTemperature}°C` : '-'}
             </span>
           </div>
           
@@ -45,7 +45,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
               <span className="text-brew-text-muted">{labels.brewKettle.maltTemperature}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.maltTemperature}°C
+              {data.maltTemperature ? `${data.maltTemperature}°C` : '-'}
             </span>
           </div>
           
@@ -58,10 +58,10 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
               className={`${
                 data.mode === "Boil" 
                   ? "bg-brew-red text-white" 
-                  : "bg-brew-green text-white"
+                  : data.mode ? "bg-brew-green text-white" : "bg-gray-500 text-white"
               }`}
             >
-              {data.mode}
+              {data.mode || '-'}
             </Badge>
           </div>
           
@@ -71,7 +71,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
               <span className="text-brew-text-muted">{labels.brewKettle.power}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.power}W
+              {data.power ? `${data.power}W` : '-'}
             </span>
           </div>
           
@@ -81,7 +81,7 @@ export default function BrewKettleCard({ data }: BrewKettleCardProps) {
               <span className="text-brew-text-muted">{labels.brewKettle.timeGMT}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.timeGMT}
+              {data.timeGMT || '-'}
             </span>
           </div>
         </div>

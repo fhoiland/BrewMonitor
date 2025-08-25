@@ -36,7 +36,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
               <span className="text-brew-text-muted">{labels.fermenter.beerType}</span>
             </div>
             <span className="text-2xl font-headline font-bold text-brew-text">
-              {data.fermenterBeerType}
+              {data.fermenterBeerType || '-'}
             </span>
           </div>
           
@@ -46,7 +46,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
               <span className="text-brew-text-muted">{labels.fermenter.temperature}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.fermenterTemperature}°C
+              {data.fermenterTemperature ? `${data.fermenterTemperature}°C` : '-'}
             </span>
           </div>
           
@@ -56,7 +56,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
               <span className="text-brew-text-muted">{labels.fermenter.gravity}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.fermenterGravity}
+              {data.fermenterGravity || '-'}
             </span>
           </div>
           
@@ -66,7 +66,7 @@ export default function FermenterCard({ data }: FermenterCardProps) {
               <span className="text-brew-text-muted">{labels.fermenter.total}</span>
             </div>
             <span className="text-xl font-mono text-brew-text">
-              {data.fermenterTotal}
+              {data.fermenterTotal || '-'}
             </span>
           </div>
           
@@ -77,11 +77,11 @@ export default function FermenterCard({ data }: FermenterCardProps) {
                 <span className="text-brew-text-muted">{labels.fermenter.timeRemaining}</span>
               </div>
               <span className="text-sm text-brew-text">
-                {data.fermenterTimeRemaining}
+                {data.fermenterTimeRemaining || '-'}
               </span>
             </div>
             <Progress 
-              value={data.fermenterProgress} 
+              value={data.fermenterProgress || 0} 
               className="h-2 bg-brew-border"
             />
           </div>

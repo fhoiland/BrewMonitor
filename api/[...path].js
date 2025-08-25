@@ -69,20 +69,20 @@ class RaptApiService {
 
   mapRaptDataToOurFormat(raptData) {
     // Map RAPT API response to our database format
-    // Adjust based on actual RAPT API response structure
+    // Return null values when no data is available
     return {
       id: 'rapt-live-data',
-      kettle_temperature: raptData.kettleTemp || 65.0,
-      malt_temperature: raptData.maltTemp || 68.0,
-      mode: raptData.brewingMode || "Live",
-      power: raptData.heaterPower || 75,
-      time_gmt: new Date().toISOString(),
-      fermenter_beer_type: raptData.beerStyle || "IPA",
-      fermenter_temperature: raptData.fermenterTemp || 20.0,
-      fermenter_gravity: raptData.specificGravity || 1.045,
-      fermenter_total: raptData.batchSize || "23L",
-      fermenter_time_remaining: raptData.timeRemaining || "Live",
-      fermenter_progress: raptData.fermentationProgress || 85,
+      kettle_temperature: raptData.kettleTemp || null,
+      malt_temperature: raptData.maltTemp || null,
+      mode: raptData.brewingMode || null,
+      power: raptData.heaterPower || null,
+      time_gmt: raptData.timestamp || null,
+      fermenter_beer_type: raptData.beerStyle || null,
+      fermenter_temperature: raptData.fermenterTemp || null,
+      fermenter_gravity: raptData.specificGravity || null,
+      fermenter_total: raptData.batchSize || null,
+      fermenter_time_remaining: raptData.timeRemaining || null,
+      fermenter_progress: raptData.fermentationProgress || null,
       updated_at: new Date().toISOString()
     };
   }
@@ -177,8 +177,26 @@ export default async function handler(req, res) {
         console.log('RAPT API failed, falling back to database:', error.message);
       }
       
-      // Fallback to database data
+      // Fallback to database data  
       const data = await storage.getBrewingData();
+      // If no database data either, return empty structure
+      if (!data || data.length === 0) {
+        return res.json([{
+          id: 'no-data',
+          kettle_temperature: null,
+          malt_temperature: null,
+          mode: null,
+          power: null,
+          time_gmt: null,
+          fermenter_beer_type: null,
+          fermenter_temperature: null,
+          fermenter_gravity: null,
+          fermenter_total: null,
+          fermenter_time_remaining: null,
+          fermenter_progress: null,
+          updated_at: new Date().toISOString()
+        }]);
+      }
       return res.json(data);
     }
 
