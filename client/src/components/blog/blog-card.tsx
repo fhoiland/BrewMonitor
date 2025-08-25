@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
+import { getBlogImage } from "@/assets/blog-images";
 
 interface BlogPost {
   id: string;
@@ -26,9 +27,9 @@ export default function BlogCard({ post }: BlogCardProps) {
 
   return (
     <Card className="bg-brew-card border-brew-border overflow-hidden hover:shadow-xl transition-shadow">
-      {post.imageUrl && (
+      {getBlogImage(post.imageUrl) && (
         <img 
-          src={post.imageUrl} 
+          src={getBlogImage(post.imageUrl)!} 
           alt={post.title}
           className="w-full h-48 object-cover"
         />

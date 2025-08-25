@@ -5,6 +5,7 @@ import Footer from "@/components/layout/footer";
 import { ArrowLeft, Calendar, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { getBlogImage } from "@/assets/blog-images";
 
 interface BlogPost {
   id: string;
@@ -66,9 +67,9 @@ export default function BlogPost() {
 
         {post && (
           <article className="max-w-4xl mx-auto">
-            {post.imageUrl && (
+            {getBlogImage(post.imageUrl) && (
               <img 
-                src={post.imageUrl} 
+                src={getBlogImage(post.imageUrl)!} 
                 alt={post.title}
                 className="w-full h-64 md:h-96 object-cover rounded-xl mb-8"
               />
