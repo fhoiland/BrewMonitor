@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Beer, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Beer } from "lucide-react";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -38,10 +37,6 @@ export default function Navigation() {
                 Om oss
               </span>
             </Link>
-            
-            <Button variant="ghost" size="sm" className="text-brew-text-muted hover:text-brew-amber">
-              <Moon className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
