@@ -93,37 +93,72 @@ class RaptApiService {
     const token = await this.getAccessToken();
     
     try {
-      // Adjust endpoint based on actual RAPT API documentation
-      const response = await axios.get(`${this.baseUrl}/api/telemetry/current`, {
+      // First, get bonded devices to see what we have
+      const devicesResponse = await axios.get(`${this.baseUrl}/api/BondedDevices/GetBondedDevices`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      return this.mapRaptDataToOurFormat(response.data);
+      if (!devicesResponse.data || devicesResponse.data.length === 0) {
+        throw new Error('No bonded devices found');
+      }
+
+      // Try to get telemetry from first available device
+      const device = devicesResponse.data[0];
+      console.log('RAPT device found:', device.deviceName, 'Type:', device.deviceType);
+
+      let telemetryEndpoint;
+      switch (device.deviceType) {
+        case 'BrewZilla':
+          telemetryEndpoint = `/api/BrewZillas/GetTelemetry?id=${device.id}`;
+          break;
+        case 'FermentationChamber':
+          telemetryEndpoint = `/api/FermentationChambers/GetTelemetry?id=${device.id}`;
+          break;
+        case 'Hydrometer':
+          telemetryEndpoint = `/api/Hydrometers/GetTelemetry?id=${device.id}`;
+          break;
+        case 'TemperatureController':
+          telemetryEndpoint = `/api/TemperatureControllers/GetTelemetry?id=${device.id}`;
+          break;
+        default:
+          // Fallback to general bonded device telemetry
+          telemetryEndpoint = `/api/BondedDevices/GetTelemetry?id=${device.id}`;
+      }
+
+      const telemetryResponse = await axios.get(`${this.baseUrl}${telemetryEndpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return this.mapRaptDataToOurFormat(telemetryResponse.data, device);
     } catch (error) {
       console.error('Failed to fetch RAPT brewing data:', error.response?.data || error.message);
       throw new Error('Failed to fetch brewing data from RAPT');
     }
   }
 
-  mapRaptDataToOurFormat(raptData) {
-    // Map RAPT API response to our database format
-    // Return null values when no data is available
+  mapRaptDataToOurFormat(telemetryData, device) {
+    // Map RAPT API telemetry response to our database format
+    console.log('RAPT telemetry data:', telemetryData);
+    
     return {
-      id: 'rapt-live-data',
-      kettle_temperature: raptData.kettleTemp || null,
-      malt_temperature: raptData.maltTemp || null,
-      mode: raptData.brewingMode || null,
-      power: raptData.heaterPower || null,
-      time_gmt: raptData.timestamp || null,
-      fermenter_beer_type: raptData.beerStyle || null,
-      fermenter_temperature: raptData.fermenterTemp || null,
-      fermenter_gravity: raptData.specificGravity || null,
-      fermenter_total: raptData.batchSize || null,
-      fermenter_time_remaining: raptData.timeRemaining || null,
-      fermenter_progress: raptData.fermentationProgress || null,
+      id: `rapt-${device.id}`,
+      kettle_temperature: telemetryData.temperature || telemetryData.currentTemperature || null,
+      malt_temperature: telemetryData.maltTemperature || null,
+      mode: telemetryData.state || telemetryData.mode || 'Unknown',
+      power: telemetryData.heatingUtilisation || telemetryData.power || null,
+      time_gmt: telemetryData.dateTime || telemetryData.timestamp || new Date().toISOString(),
+      fermenter_beer_type: device.deviceName || 'Unknown',
+      fermenter_temperature: telemetryData.temperature || telemetryData.currentTemperature || null,
+      fermenter_gravity: telemetryData.gravity || telemetryData.specificGravity || null,
+      fermenter_total: null, // Not available in standard telemetry
+      fermenter_time_remaining: null, // Calculated field
+      fermenter_progress: telemetryData.progress || null,
       updated_at: new Date().toISOString()
     };
   }
