@@ -125,7 +125,13 @@ export default function AdminBlogManagement() {
                 </DialogTitle>
               </DialogHeader>
               <BlogForm 
-                initialData={selectedPost}
+                initialData={selectedPost ? {
+                  title: selectedPost.title,
+                  summary: selectedPost.summary,
+                  content: selectedPost.content,
+                  imageUrl: selectedPost.imageUrl,
+                  published: selectedPost.published,
+                } : undefined}
                 postId={selectedPost?.id}
                 onSuccess={handleFormSuccess}
               />

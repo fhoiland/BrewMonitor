@@ -58,7 +58,8 @@ async function upsertUser(
   claims: any,
 ) {
   await storage.upsertUser({
-    id: claims["sub"],
+    username: claims["sub"] || `user_${Date.now()}`, // Generate username from sub claim
+    password: `oauth_${claims["sub"]}`, // Generate a placeholder password for OAuth users
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
