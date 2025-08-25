@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           return res.json(raptData);
         } catch (error) {
-          console.log('RAPT API failed, falling back to database:', error.message);
+          console.log('RAPT API failed, falling back to database:', (error as Error).message);
         }
       }
       
