@@ -1,8 +1,94 @@
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
 const sql = neon(process.env.DATABASE_URL);
+
+// RAPT API Integration
+class RaptApiService {
+  constructor() {
+    this.baseUrl = 'https://api.rapt.io';
+    this.authUrl = 'https://id.rapt.io/connect/token';
+    this.accessToken = null;
+    this.tokenExpiry = null;
+  }
+
+  async getAccessToken() {
+    // Check if we have RAPT credentials
+    if (!process.env.RAPT_USERNAME || !process.env.RAPT_API_SECRET) {
+      throw new Error('RAPT credentials not configured');
+    }
+
+    // Check if token is still valid (with 5 min buffer)
+    if (this.accessToken && this.tokenExpiry && 
+        new Date().getTime() < this.tokenExpiry.getTime() - 5 * 60 * 1000) {
+      return this.accessToken;
+    }
+
+    try {
+      const response = await axios.post(this.authUrl, new URLSearchParams({
+        'client_id': 'rapt-user',
+        'grant_type': 'password',
+        'username': process.env.RAPT_USERNAME,
+        'password': process.env.RAPT_API_SECRET
+      }), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      this.accessToken = response.data.access_token;
+      this.tokenExpiry = new Date(Date.now() + response.data.expires_in * 1000);
+      
+      return this.accessToken;
+    } catch (error) {
+      console.error('Failed to get RAPT access token:', error.response?.data || error.message);
+      throw new Error('RAPT authentication failed');
+    }
+  }
+
+  async fetchBrewingData() {
+    const token = await this.getAccessToken();
+    
+    try {
+      // Adjust endpoint based on actual RAPT API documentation
+      const response = await axios.get(`${this.baseUrl}/api/telemetry/current`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return this.mapRaptDataToOurFormat(response.data);
+    } catch (error) {
+      console.error('Failed to fetch RAPT brewing data:', error.response?.data || error.message);
+      throw new Error('Failed to fetch brewing data from RAPT');
+    }
+  }
+
+  mapRaptDataToOurFormat(raptData) {
+    // Map RAPT API response to our database format
+    // Adjust based on actual RAPT API response structure
+    return {
+      id: 'rapt-live-data',
+      kettle_temperature: raptData.kettleTemp || 65.0,
+      malt_temperature: raptData.maltTemp || 68.0,
+      mode: raptData.brewingMode || "Live",
+      power: raptData.heaterPower || 75,
+      time_gmt: new Date().toISOString(),
+      fermenter_beer_type: raptData.beerStyle || "IPA",
+      fermenter_temperature: raptData.fermenterTemp || 20.0,
+      fermenter_gravity: raptData.specificGravity || 1.045,
+      fermenter_total: raptData.batchSize || "23L",
+      fermenter_time_remaining: raptData.timeRemaining || "Live",
+      fermenter_progress: raptData.fermentationProgress || 85,
+      updated_at: new Date().toISOString()
+    };
+  }
+}
+
+const raptApi = new RaptApiService();
 
 // Simple storage functions
 const storage = {
@@ -81,6 +167,17 @@ export default async function handler(req, res) {
 
     // Data endpoints
     if (url === '/api/brewing-data' && method === 'GET') {
+      try {
+        // Try RAPT API first if configured
+        if (process.env.RAPT_USERNAME && process.env.RAPT_API_SECRET) {
+          const raptData = await raptApi.fetchBrewingData();
+          return res.json([raptData]); // Return as array to match database format
+        }
+      } catch (error) {
+        console.log('RAPT API failed, falling back to database:', error.message);
+      }
+      
+      // Fallback to database data
       const data = await storage.getBrewingData();
       return res.json(data);
     }
