@@ -51,15 +51,6 @@ export default function Home() {
     queryKey: ["/api/stats"],
   });
 
-  // Debug logging
-  console.log('Home component data:', { 
-    blogPosts, 
-    blogLoading, 
-    blogError,
-    brewingData,
-    brewingLoading,
-    brewingError 
-  });
 
 
   return (
@@ -117,11 +108,7 @@ export default function Home() {
               </div>
             ) : blogPosts && blogPosts.length > 0 ? (
               blogPosts.slice(0, 3).map((post) => (
-                <div key={post.id} className="bg-white p-4 rounded border">
-                  <h3 className="text-black font-bold">{post.title}</h3>
-                  <p className="text-gray-600">{post.summary}</p>
-                  <small className="text-gray-400">ID: {post.id}</small>
-                </div>
+                <BlogCard key={post.id} post={post} />
               ))
             ) : (
               <div className="col-span-3 text-center p-8">

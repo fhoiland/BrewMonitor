@@ -1,9 +1,50 @@
-import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
-const sql = neon(process.env.DATABASE_URL);
+// Supabase REST API configuration
+const supabase = {
+  url: 'https://ahembadjzomvymqrujto.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoZW1iYWRqem9tdnltcXJ1anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMjQ3NzgsImV4cCI6MjA3MTcwMDc3OH0.w95g_j5SzM3ltI7DKEoE0D0R9dcGNFjlU2Jo6o0S2uM'
+};
+
+// Helper function for Supabase REST API calls
+async function supabaseRequest(endpoint, options = {}) {
+  const response = await fetch(`${supabase.url}/rest/v1/${endpoint}`, {
+    ...options,
+    headers: {
+      'apikey': supabase.key,
+      'Authorization': `Bearer ${supabase.key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return transformKeys(data);
+}
+
+// Convert snake_case to camelCase for frontend compatibility
+function transformKeys(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(transformKeys);
+  }
+  
+  if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result, key) => {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      result[camelKey] = transformKeys(obj[key]);
+      return result;
+    }, {});
+  }
+  
+  return obj;
+}
 
 // RAPT API Integration
 class RaptApiService {
@@ -90,35 +131,38 @@ class RaptApiService {
 
 const raptApi = new RaptApiService();
 
-// Simple storage functions
+// Supabase storage functions
 const storage = {
   async getUserByUsername(username) {
-    const result = await sql`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
-    return result[0] || null;
+    const users = await supabaseRequest(`users?username=eq.${username}`);
+    return users[0] || null;
   },
   
   async createUser(userData) {
-    const result = await sql`
-      INSERT INTO users (username, password) 
-      VALUES (${userData.username}, ${userData.password}) 
-      RETURNING id, username
-    `;
-    return result[0];
+    const user = {
+      ...userData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const [created] = await supabaseRequest('users', {
+      method: 'POST',
+      body: JSON.stringify(user),
+    });
+    return created;
   },
 
   async getBrewingData() {
-    const result = await sql`SELECT * FROM brewing_data ORDER BY id DESC`;
-    return result;
+    const data = await supabaseRequest('brewing_data?limit=1');
+    return data[0] || null;
   },
 
   async getBlogPosts() {
-    const result = await sql`SELECT * FROM blog_posts ORDER BY created_at DESC`;
-    return result;
+    return await supabaseRequest('blog_posts?published=eq.true&order=created_at.desc');
   },
 
   async getStats() {
-    const result = await sql`SELECT * FROM stats ORDER BY id DESC LIMIT 1`;
-    return result[0] || null;
+    const data = await supabaseRequest('stats?limit=1');
+    return data[0] || null;
   }
 };
 
@@ -171,7 +215,7 @@ export default async function handler(req, res) {
         // Try RAPT API first if configured
         if (process.env.RAPT_USERNAME && process.env.RAPT_API_SECRET) {
           const raptData = await raptApi.fetchBrewingData();
-          return res.json([raptData]); // Return as array to match database format
+          return res.json(transformKeys(raptData)); // Transform to camelCase
         }
       } catch (error) {
         console.log('RAPT API failed, falling back to database:', error.message);
@@ -179,24 +223,6 @@ export default async function handler(req, res) {
       
       // Fallback to database data  
       const data = await storage.getBrewingData();
-      // If no database data either, return empty structure
-      if (!data || data.length === 0) {
-        return res.json([{
-          id: 'no-data',
-          kettle_temperature: null,
-          malt_temperature: null,
-          mode: null,
-          power: null,
-          time_gmt: null,
-          fermenter_beer_type: null,
-          fermenter_temperature: null,
-          fermenter_gravity: null,
-          fermenter_total: null,
-          fermenter_time_remaining: null,
-          fermenter_progress: null,
-          updated_at: new Date().toISOString()
-        }]);
-      }
       return res.json(data);
     }
 

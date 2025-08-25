@@ -25,19 +25,15 @@ export default function BlogCard({ post }: BlogCardProps) {
     });
   };
 
-  // Debug log for blog card
-  console.log('BlogCard rendering:', { 
-    post: post.title, 
-    imageUrl: post.imageUrl, 
-    resolvedImage: getBlogImage(post.imageUrl) 
-  });
-
   return (
     <Card className="bg-brew-card border-brew-border overflow-hidden hover:shadow-xl transition-shadow">
-      {/* Always show placeholder for testing */}
-      <div className="w-full h-48 bg-brew-amber-light flex items-center justify-center">
-        <span className="text-brew-dark font-medium">Blog Bilde</span>
-      </div>
+      {getBlogImage(post.imageUrl) && (
+        <img 
+          src={getBlogImage(post.imageUrl)!} 
+          alt={post.title}
+          className="w-full h-48 object-cover"
+        />
+      )}
       <CardContent className="p-6">
         <h3 className="text-xl font-headline font-semibold text-brew-text mb-2">
           {post.title}
