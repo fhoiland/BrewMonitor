@@ -51,7 +51,6 @@ export default function Home() {
     queryKey: ["/api/stats"],
   });
 
-  const isLoading = brewingLoading || blogLoading || statsLoading;
 
   return (
     <div className="min-h-screen bg-brew-dark">
@@ -61,7 +60,7 @@ export default function Home() {
         {/* Brewing Status Dashboard */}
         <section className="mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {isLoading ? (
+            {brewingLoading ? (
               <>
                 <div className="flex items-center justify-center h-64 bg-brew-card border border-brew-border rounded-xl">
                   <Loader2 className="h-8 w-8 animate-spin text-brew-amber" />

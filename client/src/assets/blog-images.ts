@@ -9,5 +9,9 @@ export const blogImages = {
 
 export function getBlogImage(imageUrl: string | null | undefined): string | null {
   if (!imageUrl) return null;
-  return blogImages[imageUrl as keyof typeof blogImages] || null;
+  // Handle both absolute and relative paths
+  const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return blogImages[normalizedUrl as keyof typeof blogImages] || 
+         blogImages[imageUrl as keyof typeof blogImages] || 
+         null;
 }
