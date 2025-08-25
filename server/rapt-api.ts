@@ -79,12 +79,16 @@ class RaptApiService {
       let workingDevice = null;
       let telemetryData = null;
       
-      // Try each device type in priority order  
-      for (const deviceType of devicePriority) {
-        const device = devicesResponse.data.find((d: any) => d.deviceType === deviceType);
-        if (!device) continue;
+      // First try to find device with specific MAC address fc-e8-c0-ef-5b-78
+      let targetDevice = devicesResponse.data.find((d: any) => d.macAddress === 'fc-e8-c0-ef-5b-78');
+      
+      if (targetDevice) {
+        console.log(`🎯 Found device with target MAC address: ${targetDevice.name} (${targetDevice.macAddress})`);
         
-        console.log(`Trying RAPT device: ${device.name} (${device.deviceType}) ID: ${device.id}`);
+        // Use the device with the target MAC address
+        const device = targetDevice;
+        
+        console.log(`Trying RAPT device: ${device.name} (${device.deviceType}) MAC: ${device.macAddress} ID: ${device.id}`);
         
         let telemetryEndpoint: string;
         switch (device.deviceType) {
@@ -132,6 +136,64 @@ class RaptApiService {
         } catch (error: any) {
           console.log(`❌ Failed to get telemetry from ${device.name}:`, error.response?.data?.error || error.message);
           continue;
+        }
+      } else {
+        // Fallback: Try each device type in priority order if target MAC not found
+        console.log('Target MAC fc-e8-c0-ef-5b-78 not found, trying device types in priority order');
+        
+        for (const deviceType of devicePriority) {
+          const device = devicesResponse.data.find((d: any) => d.deviceType === deviceType);
+          if (!device) continue;
+          
+          console.log(`Trying RAPT device: ${device.name} (${device.deviceType}) MAC: ${device.macAddress} ID: ${device.id}`);
+          
+          let telemetryEndpoint: string;
+          switch (device.deviceType) {
+            case 'BLETemperature':
+              telemetryEndpoint = `/api/BondedDevices/GetTelemetry?id=${device.id}`;
+              break;
+            case 'BrewZilla':
+              telemetryEndpoint = `/api/BrewZillas/GetTelemetry?id=${device.id}`;
+              break;
+            case 'FermentationChamber':
+              telemetryEndpoint = `/api/FermentationChambers/GetTelemetry?id=${device.id}`;
+              break;
+            case 'Hydrometer':
+              telemetryEndpoint = `/api/Hydrometers/GetTelemetry?id=${device.id}`;
+              break;
+            case 'TemperatureController':
+              telemetryEndpoint = `/api/TemperatureControllers/GetTelemetry?id=${device.id}`;
+              break;
+            default:
+              telemetryEndpoint = `/api/BondedDevices/GetTelemetry?id=${device.id}`;
+          }
+          
+          try {
+            // For BLETemperature devices, use the device data directly (no telemetry call needed)
+            if (device.deviceType === 'BLETemperature' && device.temperature !== undefined) {
+              console.log(`✅ Using direct temperature data from ${device.name}: ${device.temperature}°C`);
+              workingDevice = device;
+              telemetryData = device; // Use device data as telemetry data
+              break;
+            }
+            
+            // For other device types, try telemetry API
+            const telemetryResponse = await axios.get(`${this.baseUrl}${telemetryEndpoint}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            console.log(`✅ Successfully got telemetry from ${device.name}`);
+            workingDevice = device;
+            telemetryData = telemetryResponse.data;
+            break;
+            
+          } catch (error: any) {
+            console.log(`❌ Failed to get telemetry from ${device.name}:`, error.response?.data?.error || error.message);
+            continue;
+          }
         }
       }
       

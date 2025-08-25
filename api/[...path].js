@@ -113,12 +113,15 @@ class RaptApiService {
       let workingDevice = null;
       let telemetryData = null;
       
-      // Try each device type in priority order
-      for (const deviceType of devicePriority) {
-        const device = devicesResponse.data.find(d => d.deviceType === deviceType);
-        if (!device) continue;
+      // First try to find device with specific MAC address fc-e8-c0-ef-5b-78
+      let targetDevice = devicesResponse.data.find(d => d.macAddress === 'fc-e8-c0-ef-5b-78');
+      
+      if (targetDevice) {
+        console.log(`🎯 Found device with target MAC address: ${targetDevice.name} (${targetDevice.macAddress})`);
         
-        console.log(`Trying RAPT device: ${device.name} (${device.deviceType}) ID: ${device.id}`);
+        // Use the device with the target MAC address
+        const device = targetDevice;
+        console.log(`Trying RAPT device: ${device.name} (${device.deviceType}) MAC: ${device.macAddress} ID: ${device.id}`);
 
         let telemetryEndpoint;
         switch (device.deviceType) {
