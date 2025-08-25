@@ -22,7 +22,7 @@ export default function Footer() {
             <h4 className="font-headline font-semibold text-brew-text mb-4">
               Navigasjon
             </h4>
-            <ul className="space-y-2">
+            <ul className="flex flex-wrap gap-4">
               <li>
                 <Link href="/">
                   <span className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors cursor-pointer">
