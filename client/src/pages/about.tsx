@@ -36,26 +36,28 @@ export default function About() {
         </div>
 
         {/* Contact Section */}
-        <div className="text-center bg-brew-card border border-brew-border rounded-lg p-12">
-          <h2 className="text-3xl font-headline font-bold mb-6">
-            Kontakt oss
-          </h2>
-          <p className="text-xl text-brew-text-muted mb-8 max-w-2xl mx-auto">
-            Har du lyst til å være med på bryggeeventyret? Ta kontakt!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="mailto:kontakt@prefabbrewcrew.no" 
-              className="bg-brew-amber text-brew-dark px-8 py-3 rounded-lg font-bold hover:bg-brew-amber/90 transition-colors"
-            >
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center bg-brew-card border border-brew-border rounded-lg p-12">
+            <h2 className="text-3xl font-headline font-bold mb-6">
               Kontakt oss
-            </a>
-            <a 
-              href="/blog" 
-              className="border border-brew-amber text-brew-amber px-8 py-3 rounded-lg font-bold hover:bg-brew-amber/10 transition-colors"
-            >
-              Les bloggen vår
-            </a>
+            </h2>
+            <p className="text-xl text-brew-text-muted mb-8 max-w-2xl mx-auto">
+              Har du lyst til å være med på bryggeeventyret? Ta kontakt!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                href="mailto:kontakt@prefabbrewcrew.no" 
+                className="bg-brew-amber text-brew-dark px-8 py-3 rounded-lg font-bold hover:bg-brew-amber/90 transition-colors"
+              >
+                Kontakt oss
+              </a>
+              <a 
+                href="/blog" 
+                className="border border-brew-amber text-brew-amber px-8 py-3 rounded-lg font-bold hover:bg-brew-amber/10 transition-colors"
+              >
+                Les bloggen vår
+              </a>
+            </div>
           </div>
         </div>
       </div>
