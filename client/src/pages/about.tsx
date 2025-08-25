@@ -1,4 +1,5 @@
 import Navigation from "@/components/layout/navigation";
+import Footer from "@/components/layout/footer";
 import { Beer } from "lucide-react";
 
 export default function About() {
@@ -35,7 +36,7 @@ export default function About() {
         </div>
 
         {/* Contact Section */}
-        <div className="text-center bg-gradient-to-r from-brew-amber/10 to-brew-amber/5 border border-brew-border rounded-lg p-12">
+        <div className="text-center bg-brew-card border border-brew-border rounded-lg p-12">
           <h2 className="text-3xl font-headline font-bold mb-6">
             Kontakt oss
           </h2>
@@ -58,6 +59,7 @@ export default function About() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

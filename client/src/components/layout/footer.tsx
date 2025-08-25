@@ -38,12 +38,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a 
-                  href="#" 
-                  className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors"
-                >
-                  Om oss
-                </a>
+                <Link href="/about">
+                  <span className="text-brew-text-muted hover:text-brew-amber text-sm transition-colors cursor-pointer">
+                    Om oss
+                  </span>
+                </Link>
               </li>
               <li>
                 <a 
