@@ -17,7 +17,9 @@ export const sessions = pgTable(
 // Users
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(), // bevisst ikke .notNull() => valgfri ved insert
+  username: varchar("username").unique().notNull(),
+  password: varchar("password").notNull(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -66,7 +68,7 @@ export const stats = pgTable("stats", {
 
 // ---------- Zod / drizzle-zod schemas ----------
 
-// NEW: users insert schema (manglet før)
+// Users insert schema
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,

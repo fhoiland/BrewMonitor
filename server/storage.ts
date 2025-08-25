@@ -4,10 +4,13 @@ import {
   blogPosts,
   stats,
   type User,
-  type UpsertUser,
+  type InsertUser,
   type BrewingData,
+  type InsertBrewingData,
   type BlogPost,
+  type InsertBlogPost,
   type Stats,
+  type InsertStats,
   insertBrewingDataSchema,
   insertBlogPostSchema,
   insertStatsSchema,
@@ -19,7 +22,9 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   // User operations (IMPORTANT: required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: InsertUser): Promise<User>;
 
   // Brewing data operations
   getBrewingData(): Promise<BrewingData | undefined>;
@@ -45,12 +50,30 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        id: randomUUID(),
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return user;
+  }
+
+  async upsertUser(userData: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
-        target: users.id,
+        target: users.username,
         set: {
           ...userData,
           updatedAt: new Date(),
@@ -126,7 +149,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBlogPost(id: string): Promise<boolean> {
     const result = await db.delete(blogPosts).where(eq(blogPosts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Stats operations
@@ -241,7 +264,12 @@ export class MemStorage implements IStorage {
       id: randomUUID(),
       username: 'admin',
       password: hashedPassword,
+      email: null,
+      firstName: null,
+      lastName: null,
+      profileImageUrl: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(adminUser.id, adminUser);
   }
@@ -259,12 +287,36 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
       id,
+      email: insertUser.email || null,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null,
+      profileImageUrl: insertUser.profileImageUrl || null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async upsertUser(insertUser: InsertUser): Promise<User> {
+    const existingUser = await this.getUserByUsername(insertUser.username);
+    if (existingUser) {
+      const updatedUser: User = {
+        ...existingUser,
+        ...insertUser,
+        email: insertUser.email || existingUser.email,
+        firstName: insertUser.firstName || existingUser.firstName,
+        lastName: insertUser.lastName || existingUser.lastName,
+        profileImageUrl: insertUser.profileImageUrl || existingUser.profileImageUrl,
+        updatedAt: new Date(),
+      };
+      this.users.set(existingUser.id, updatedUser);
+      return updatedUser;
+    } else {
+      return this.createUser(insertUser);
+    }
   }
 
   async getBrewingData(): Promise<BrewingData | undefined> {

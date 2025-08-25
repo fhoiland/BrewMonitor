@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin brewing data routes
-  app.put("/api/brewing-data", authenticateToken, async (req, res) => {
+  app.put("/api/brewing-data", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const brewingData = insertBrewingDataSchema.parse(req.body);
       const updated = await storage.updateBrewingData(brewingData);
@@ -123,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin blog routes
-  app.get("/api/admin/blog-posts", authenticateToken, async (req, res) => {
+  app.get("/api/admin/blog-posts", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const posts = await storage.getAllBlogPosts();
       res.json(posts);
@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/blog-posts/:id", authenticateToken, async (req, res) => {
+  app.get("/api/admin/blog-posts/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const post = await storage.getBlogPost(req.params.id);
       if (!post) {
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/blog-posts", authenticateToken, async (req, res) => {
+  app.post("/api/admin/blog-posts", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const postData = insertBlogPostSchema.parse(req.body);
       const post = await storage.createBlogPost(postData);
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/blog-posts/:id", authenticateToken, async (req, res) => {
+  app.put("/api/admin/blog-posts/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const postData = insertBlogPostSchema.partial().parse(req.body);
       const post = await storage.updateBlogPost(req.params.id, postData);
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/blog-posts/:id", authenticateToken, async (req, res) => {
+  app.delete("/api/admin/blog-posts/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const success = await storage.deleteBlogPost(req.params.id);
       if (!success) {
@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI blog generation route
-  app.post("/api/admin/generate-blog-post", authenticateToken, async (req, res) => {
+  app.post("/api/admin/generate-blog-post", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { topic, additionalContext } = req.body;
       
@@ -206,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin stats route
-  app.put("/api/stats", authenticateToken, async (req, res) => {
+  app.put("/api/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const statsData = insertStatsSchema.parse(req.body);
       const stats = await storage.updateStats(statsData);
