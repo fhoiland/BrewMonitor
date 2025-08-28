@@ -117,7 +117,7 @@ class RaptApiService {
             console.log(`✅ Using direct temperature data from ${device.name}: ${device.temperature}°C`);
             workingDevice = device;
             telemetryData = device; // Use device data as telemetry data
-            break;
+            return this.mapRaptDataToOurFormat(telemetryData, workingDevice);
           }
           
           // For other device types, try telemetry API
@@ -131,11 +131,11 @@ class RaptApiService {
           console.log(`✅ Successfully got telemetry from ${device.name}`);
           workingDevice = device;
           telemetryData = telemetryResponse.data;
-          break;
+          return this.mapRaptDataToOurFormat(telemetryData, workingDevice);
           
         } catch (error: any) {
           console.log(`❌ Failed to get telemetry from ${device.name}:`, error.response?.data?.error || error.message);
-          continue;
+          // Continue to fallback
         }
       } else {
         // Fallback: Try each device type in priority order if target MAC not found
@@ -174,7 +174,7 @@ class RaptApiService {
               console.log(`✅ Using direct temperature data from ${device.name}: ${device.temperature}°C`);
               workingDevice = device;
               telemetryData = device; // Use device data as telemetry data
-              break;
+              return this.mapRaptDataToOurFormat(telemetryData, workingDevice);
             }
             
             // For other device types, try telemetry API
@@ -188,11 +188,11 @@ class RaptApiService {
             console.log(`✅ Successfully got telemetry from ${device.name}`);
             workingDevice = device;
             telemetryData = telemetryResponse.data;
-            break;
+            return this.mapRaptDataToOurFormat(telemetryData, workingDevice);
             
           } catch (error: any) {
             console.log(`❌ Failed to get telemetry from ${device.name}:`, error.response?.data?.error || error.message);
-            continue;
+            // Continue to next device
           }
         }
       }
