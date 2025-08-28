@@ -355,17 +355,39 @@ export default async function handler(req, res) {
     // Auth endpoints
     if (url === '/api/auth/login' && method === 'POST') {
       const { username, password } = req.body;
+      console.log('Login attempt for username:', username);
       
-      const user = await storage.getUserByUsername(username);
+      let user = await storage.getUserByUsername(username);
+      
+      // If admin user doesn't exist, create it
+      if (!user && username === 'admin') {
+        console.log('Admin user not found, creating...');
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        try {
+          user = await storage.createUser({
+            id: 'admin-' + Date.now(),
+            username: 'admin',
+            password: hashedPassword
+          });
+          console.log('Admin user created successfully');
+        } catch (error) {
+          console.error('Failed to create admin user:', error);
+          return res.status(500).json({ message: "Failed to create admin user" });
+        }
+      }
+      
       if (!user) {
+        console.log('User not found:', username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
+        console.log('Invalid password for user:', username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log('Login successful for user:', username);
       const token = generateToken({ id: user.id, username: user.username });
       
       res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Strict${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`);
