@@ -462,7 +462,25 @@ export default async function handler(req, res) {
 
     // Auth check
     if (url === '/api/auth/me' && method === 'GET') {
-      return res.status(401).json({ message: "Access token required" });
+      try {
+        const token = req.headers.cookie?.match(/token=([^;]*)/)?.[1];
+        
+        if (!token) {
+          return res.status(401).json({ message: "No token provided" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        const user = await storage.getUserByUsername(decoded.username);
+        
+        if (!user) {
+          return res.status(401).json({ message: "User not found" });
+        }
+
+        return res.json({ user: { id: user.id, username: user.username } });
+      } catch (error) {
+        console.error('Auth verification failed:', error);
+        return res.status(401).json({ message: "Invalid token" });
+      }
     }
 
     // Default 404
