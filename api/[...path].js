@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import OpenAI from 'openai';
 
 // Supabase REST API configuration
 const supabase = {
@@ -210,6 +211,62 @@ class RaptApiService {
 
 const raptApi = new RaptApiService();
 
+// OpenAI service for blog generation
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+async function generateBlogPost(topic, additionalContext) {
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    const prompt = `Generate a blog post about brewing beer with the following topic: "${topic}". ${additionalContext ? `Additional context: ${additionalContext}` : ''}
+
+Write the blog post in Norwegian language suitable for a brewing blog called "Prefab Brew Crew". The post should be informative, engaging, and focused on home brewing techniques, experiences, or equipment.
+
+Respond with JSON in this exact format:
+{
+  "title": "Blog post title in Norwegian",
+  "summary": "A brief 1-2 sentence summary in Norwegian", 
+  "content": "Full blog post content in Norwegian (3-5 paragraphs)"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a Norwegian brewing expert writing for a home brewing blog. Write engaging, informative content about beer brewing techniques, equipment, and experiences."
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2000,
+      temperature: 0.7
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+
+    if (!result.title || !result.summary || !result.content) {
+      throw new Error("Invalid response from OpenAI - missing required fields");
+    }
+
+    return {
+      title: result.title,
+      summary: result.summary,
+      content: result.content,
+    };
+  } catch (error) {
+    console.error('OpenAI blog generation error:', error);
+    throw new Error(`Failed to generate blog post: ${error.message}`);
+  }
+}
+
 // Supabase storage functions
 const storage = {
   async getUserByUsername(username) {
@@ -313,6 +370,32 @@ export default async function handler(req, res) {
     if (url === '/api/stats' && method === 'GET') {
       const data = await storage.getStats();
       return res.json(data);
+    }
+
+    // Admin blog post generation  
+    if (url.startsWith('/api/admin/generate-blog-post') && method === 'POST') {
+      try {
+        // Simple auth check for admin routes
+        const authHeader = req.headers.authorization || req.headers.cookie;
+        if (!authHeader || !authHeader.includes('token=')) {
+          return res.status(401).json({ message: "Authentication required" });
+        }
+
+        const { topic, additionalContext } = req.body;
+        
+        if (!topic) {
+          return res.status(400).json({ message: "Topic is required" });
+        }
+
+        const generatedPost = await generateBlogPost(topic, additionalContext);
+        return res.json(generatedPost);
+      } catch (error) {
+        console.error('Blog generation failed:', error);
+        return res.status(500).json({ 
+          message: "Failed to generate blog post", 
+          error: error.message 
+        });
+      }
     }
 
     // Auth check
