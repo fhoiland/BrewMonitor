@@ -32,10 +32,12 @@ export default function AdminLogin() {
     },
   });
 
-  if (isAuthenticated) {
-    setLocation("/admin");
-    return null;
-  }
+  // Use useEffect for redirect to avoid render-time state updates
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      setLocation("/admin");
+    }
+  }, [isAuthenticated, setLocation]);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
