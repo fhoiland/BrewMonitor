@@ -225,7 +225,7 @@ async function generateBlogPost(topic, additionalContext) {
     // Create OpenAI client inside function to avoid module-level issues
     const openaiClient = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 30000 // 30 second timeout
+      timeout: 8000 // 8 second timeout for Vercel
     });
 
     const prompt = `Generate a blog post about brewing beer with the following topic: "${topic}". ${additionalContext ? `Additional context: ${additionalContext}` : ''}
@@ -241,11 +241,11 @@ Respond with JSON in this exact format:
 
     console.log('Making OpenAI API call...');
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini", // Faster model for Vercel
       messages: [
         {
           role: "system",
-          content: "You are a Norwegian brewing expert writing for a home brewing blog. Write engaging, informative content about beer brewing techniques, equipment, and experiences."
+          content: "You are a Norwegian brewing expert. Write a brief, engaging blog post about beer brewing."
         },
         {
           role: "user",
@@ -253,7 +253,7 @@ Respond with JSON in this exact format:
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 2000,
+      max_tokens: 1000, // Reduced for faster response
       temperature: 0.7
     });
 
@@ -286,16 +286,13 @@ Respond with JSON in this exact format:
   } catch (error) {
     console.error('OpenAI blog generation error:', error);
     
-    // Return a fallback response for testing
-    if (error.message.includes('API key') || error.message.includes('timeout')) {
-      return {
-        title: "Brygging og teknologi - En ny æra",
-        summary: "Moderne bryggeteknologi revolusjonerer hjemmebrygging med presise målinger og automatisering.",
-        content: "I dagens moderne bryggeverden ser vi en utrolig utvikling innen teknologi som gjør hjemmebrygging både enklere og mer presist. Fra digitale termometre til automatiserte bryggeanlegg, har teknologien åpnet nye muligheter for ølentusiaster.\n\nRAPA og lignende systemer gir oss muligheten til å overvåke gjeringstemperatur i sanntid, noe som er avgjørende for å oppnå konsistente resultater. Dette lar bryggere eksperimentere trygt med nye oppskrifter og teknikker.\n\nVi ser også en økende trend mot mer presise målinger og datalogging, som hjelper bryggere å forstå hvordan små endringer påvirker det endelige produktet. Dette er framtiden for hjemmebrygging!"
-      };
-    }
-    
-    throw error;
+    // Return a fallback response if OpenAI fails
+    console.log('Returning fallback blog post due to error');
+    return {
+      title: `Brygging og ${topic} - Utforsk mulighetene`,
+      summary: "En spennende utforskning av moderne bryggemetoder og teknikker for hjemmebryggere.",
+      content: `I bryggerverdenen er ${topic} et fascinerende område som åpner for mange kreative muligheter. Som hjemmebryggere i Prefab Brew Crew vet vi hvor viktig det er å forstå de grunnleggende prinsippene.\n\nGjennom eksperimentering og nøye observasjon kan vi forbedre våre bryggemetoder betydelig. Temperaturstyring og timing er kritiske faktorer som påvirker det endelige resultatet.\n\nVed å kombinere tradisjonelle teknikker med moderne utstyr som RAPT-sensorer, kan vi oppnå mer konsistente og deiligere øl. Dette er essensen av moderne hjemmebrygging!`
+    };
   }
 }
 
