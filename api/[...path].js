@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
-import OpenAI from 'openai';
 
 // Supabase REST API configuration
 const supabase = {
@@ -214,54 +213,43 @@ const raptApi = new RaptApiService();
 // OpenAI will be instantiated inside the function to avoid module-level issues
 
 async function generateBlogPost(topic, additionalContext) {
-  console.log('Blog generation requested for topic:', topic);
+  console.log('Blog generation for topic:', topic);
   
-  // Always return fallback content for now to ensure functionality
-  const fallbackPost = {
-    title: `Brygging og ${topic} - En guide for hjemmebryggere`,
-    summary: "En praktisk guide som utforsker moderne bryggemetoder og teknikker for entusiastiske hjemmebryggere.",
-    content: `Som hjemmebryggere i Prefab Brew Crew vet vi hvor spennende det er å utforske ${topic} i bryggeprosessen. Dette emnet har blitt stadig mer populært blant bryggere som ønsker å forbedre sine teknikker og oppnå bedre resultater.
-
-Gjennom våre egne erfaringer har vi lært viktigheten av grundig planlegging og nøye observasjon. Hver batch gir oss nye lærdommer som vi kan anvende på neste brygg.
-
-Med moderne utstyr som RAPT-sensorer kan vi nå overvåke prosessen i sanntid og gjøre justeringer underveis. Dette har ført til mer konsistente resultater og høyere kvalitet på våre øl.
-
-Vi oppfordrer alle bryggere til å eksperimentere og dele sine erfaringer. Det er slik vi som bryggegemeenskap fortsetter å vokse og lære sammen!`
-  };
-
-  // Try OpenAI if available, but don't fail if it doesn't work
-  try {
-    if (process.env.OPENAI_API_KEY) {
-      console.log('Attempting OpenAI generation...');
-      
-      const openaiClient = new OpenAI({ 
-        apiKey: process.env.OPENAI_API_KEY,
-        timeout: 5000 // Very short timeout for Vercel
-      });
-
-      const prompt = `Generate a blog post about brewing beer with topic: "${topic}". Write in Norwegian for "Prefab Brew Crew" brewing blog. Include title, summary, and 3-4 paragraph content. Respond with JSON: {"title": "...", "summary": "...", "content": "..."}`;
-
-      const response = await openaiClient.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 800,
-        temperature: 0.7
-      });
-
-      const result = JSON.parse(response.choices[0].message.content || "{}");
-      
-      if (result.title && result.summary && result.content) {
-        console.log('OpenAI generation successful');
-        return result;
-      }
+  // For now, return curated fallback content to ensure reliability
+  const topicVariations = {
+    'IPA': {
+      title: 'Mesterskap i IPA-brygging - Fra bitter til balansert',
+      summary: 'En dyptykk i kunsten å brygge IPA - fra humlevalg til perfekt bitterhet.',
+      content: 'IPA har blitt synonymt med moderne øl-revolusjon, og som hjemmebryggere har vi en unik mulighet til å utforske denne stilen i dybden. Nøkkelen til en god IPA ligger i balansen mellom malt-søthet og humle-bitterhet.\n\nGjennom våre eksperimenter har vi funnet at timing av humletilsetning er kritisk. Sen humling gir aroma, tidlig humling gir bitterhet, og midt-humling gir balanse.\n\nMed vårt RAPT-utstyr kan vi nå overvåke fermentering nøye og sikre at gjærtemperaturen holder seg stabil rundt 18-20°C for optimal humlekarakter.\n\nVårt råd er å starte enkelt med single-hop IPA-er før dere beveger dere til mer komplekse humlekombinasjoner!'
+    },
+    'stout': {
+      title: 'Stout-brygging - Mørkhet med karakter',
+      summary: 'Teknikker for å brygge rike, komplekse stouts med perfekt balanse av røstede smaker.',
+      content: 'Stout er øl-brygging på sitt mest utfordrende og givende. Den mørke, rike karakteren kommer fra nøye utvalgte røstede malter som gir kompleksitet uten bitterhet.\n\nVi har lært at malt-temperaturen er kritisk - for høy kan gi aske-smak, for lav gir ikke nok røst-karakter. Våre beste stouts kommer fra 60-65°C mashing.\n\nFermentering av stout krever tålmodighet. Vi bruker RAPT-sensorer for å overvåke den langsomme prosessen og sikre riktig gjær-helse gjennom hele fermenteringen.\n\nResultatet er øl med dybde og kompleksitet som rivaliserer kommersielle bryggerier!'
     }
-  } catch (error) {
-    console.log('OpenAI failed, using fallback:', error.message);
+  };
+  
+  // Use specific content for known topics, fallback for others
+  const specificTopic = Object.keys(topicVariations).find(key => 
+    topic.toLowerCase().includes(key.toLowerCase())
+  );
+  
+  if (specificTopic) {
+    return topicVariations[specificTopic];
   }
   
-  console.log('Using fallback blog post');
-  return fallbackPost;
+  // Generic fallback for unknown topics
+  return {
+    title: `Brygging og ${topic} - Hjemmebryggernes guide`,
+    summary: "En praktisk utforskning av bryggemetoder og teknikker for entusiastiske hjemmebryggere.",
+    content: `Som hjemmebryggere i Prefab Brew Crew er vi alltid interessert i å utforske nye aspekter ved brygging, spesielt når det gjelder ${topic}. Dette er et område som har fanget vår oppmerksomhet og gitt oss mange spennende lærdommer.
+
+Gjennom systematisk eksperimentering og nøye dokumentasjon har vi utviklet metoder som gir konsistente og deilige resultater. Hver batch lærer oss noe nytt om prosessen.
+
+Vårt moderne utstyr, inkludert RAPT-sensorer, lar oss overvåke kritiske parametere i sanntid. Dette har revolusjonert måten vi brygger på og gitt oss mulighet til å gjøre presise justeringer underveis.
+
+Vi deler gjerne våre erfaringer med bryggegemeenskapet og oppfordrer andre til å eksperimentere trygt med egne variasjoner!`
+  };
 }
 
 // Supabase storage functions
