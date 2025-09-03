@@ -212,11 +212,8 @@ const raptApi = new RaptApiService();
 
 // OpenAI will be instantiated inside the function to avoid module-level issues
 
-async function generateBlogPost(topic, additionalContext) {
-  console.log('Blog generation for topic:', topic);
-  
-  // For now, return curated fallback content to ensure reliability
-  const topicVariations = {
+function generateBlogPost(topic) {
+  const topics = {
     'IPA': {
       title: 'Mesterskap i IPA-brygging - Fra bitter til balansert',
       summary: 'En dyptykk i kunsten å brygge IPA - fra humlevalg til perfekt bitterhet.',
@@ -226,29 +223,26 @@ async function generateBlogPost(topic, additionalContext) {
       title: 'Stout-brygging - Mørkhet med karakter',
       summary: 'Teknikker for å brygge rike, komplekse stouts med perfekt balanse av røstede smaker.',
       content: 'Stout er øl-brygging på sitt mest utfordrende og givende. Den mørke, rike karakteren kommer fra nøye utvalgte røstede malter som gir kompleksitet uten bitterhet.\n\nVi har lært at malt-temperaturen er kritisk - for høy kan gi aske-smak, for lav gir ikke nok røst-karakter. Våre beste stouts kommer fra 60-65°C mashing.\n\nFermentering av stout krever tålmodighet. Vi bruker RAPT-sensorer for å overvåke den langsomme prosessen og sikre riktig gjær-helse gjennom hele fermenteringen.\n\nResultatet er øl med dybde og kompleksitet som rivaliserer kommersielle bryggerier!'
+    },
+    'lager': {
+      title: 'Lager - Renheten i enkelhet',
+      summary: 'Hvordan brygge klassisk lager med tålmodighet og presisjon.',
+      content: 'Lager-brygging er en kunst som krever tålmodighet og presisjon. Som hjemmebryggere har vi lært at rene ingredienser og stabile temperaturer er nøkkelen til suksess.\n\nKald fermentering ved 8-12°C over flere uker gir den klassiske rene smaken vi forbinder med gode lagere. RAPT-sensorer hjelper oss å holde temperaturen stabil.\n\nEtter fermentering kommer lagring - ofte flere måneder i kjølig miljø. Dette er hvor tålmodigheten virkelig testes, men resultatet er verdt ventetiden.\n\nVåre beste lagere har kommet fra enkle oppskrifter, ren teknikk og mye tålmodighet!'
     }
   };
   
-  // Use specific content for known topics, fallback for others
-  const specificTopic = Object.keys(topicVariations).find(key => 
-    topic.toLowerCase().includes(key.toLowerCase())
-  );
-  
-  if (specificTopic) {
-    return topicVariations[specificTopic];
+  // Find matching topic
+  for (const [key, content] of Object.entries(topics)) {
+    if (topic.toLowerCase().includes(key.toLowerCase())) {
+      return content;
+    }
   }
   
-  // Generic fallback for unknown topics
+  // Generic fallback
   return {
     title: `Brygging og ${topic} - Hjemmebryggernes guide`,
     summary: "En praktisk utforskning av bryggemetoder og teknikker for entusiastiske hjemmebryggere.",
-    content: `Som hjemmebryggere i Prefab Brew Crew er vi alltid interessert i å utforske nye aspekter ved brygging, spesielt når det gjelder ${topic}. Dette er et område som har fanget vår oppmerksomhet og gitt oss mange spennende lærdommer.
-
-Gjennom systematisk eksperimentering og nøye dokumentasjon har vi utviklet metoder som gir konsistente og deilige resultater. Hver batch lærer oss noe nytt om prosessen.
-
-Vårt moderne utstyr, inkludert RAPT-sensorer, lar oss overvåke kritiske parametere i sanntid. Dette har revolusjonert måten vi brygger på og gitt oss mulighet til å gjøre presise justeringer underveis.
-
-Vi deler gjerne våre erfaringer med bryggegemeenskapet og oppfordrer andre til å eksperimentere trygt med egne variasjoner!`
+    content: `Som hjemmebryggere i Prefab Brew Crew er vi alltid interessert i å utforske nye aspekter ved brygging, spesielt når det gjelder ${topic}. Dette er et område som har fanget vår oppmerksomhet og gitt oss mange spennende lærdommer.\n\nGjennom systematisk eksperimentering og nøye dokumentasjon har vi utviklet metoder som gir konsistente og deilige resultater. Hver batch lærer oss noe nytt om prosessen.\n\nVårt moderne utstyr, inkludert RAPT-sensorer, lar oss overvåke kritiske parametere i sanntid. Dette har revolusjonert måten vi brygger på og gitt oss mulighet til å gjøre presise justeringer underveis.\n\nVi deler gjerne våre erfaringer med bryggegemeenskapet og oppfordrer andre til å eksperimentere trygt med egne variasjoner!`
   };
 }
 
@@ -381,34 +375,26 @@ export default async function handler(req, res) {
 
     // Admin blog post generation  
     if (url.startsWith('/api/admin/generate-blog-post') && method === 'POST') {
-      console.log('Starting blog post generation request');
       try {
         // Simple auth check for admin routes
         const authHeader = req.headers.authorization || req.headers.cookie;
         if (!authHeader || !authHeader.includes('token=')) {
-          console.log('Authentication failed for blog generation');
           return res.status(401).json({ message: "Authentication required" });
         }
 
-        const { topic, additionalContext } = req.body;
-        console.log('Blog generation request data:', { topic, additionalContext });
+        const { topic } = req.body;
         
         if (!topic) {
-          console.log('Missing topic in request');
           return res.status(400).json({ message: "Topic is required" });
         }
 
-        console.log('Calling generateBlogPost function...');
-        const generatedPost = await generateBlogPost(topic, additionalContext);
-        console.log('Blog generation completed successfully');
+        // Direct fallback generation without complex logic
+        const generatedPost = generateBlogPost(topic);
         return res.json(generatedPost);
       } catch (error) {
-        console.error('Blog generation failed with error:', error);
-        console.error('Error stack:', error.stack);
         return res.status(500).json({ 
           message: "Failed to generate blog post", 
-          error: error.message,
-          details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          error: error.message
         });
       }
     }
