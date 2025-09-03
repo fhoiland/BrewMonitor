@@ -21,7 +21,7 @@
     },
     {
       "src": "/api/auth/logout",
-      "dest": "/api/auth/logout.js"
+      "dest": "/api/auth/logout.js"  
     },
     {
       "src": "/api/auth/me",
@@ -32,7 +32,7 @@
       "dest": "/api/blog-posts.js"
     },
     {
-      "src": "/api/stats",
+      "src": "/api/stats", 
       "dest": "/api/stats.js"
     },
     {
@@ -42,10 +42,6 @@
     {
       "src": "/api/generate-blog",
       "dest": "/api/generate-blog.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/[...path].js"
     },
     {
       "src": "/(.*)",
