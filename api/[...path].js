@@ -364,8 +364,13 @@ export default async function handler(req, res) {
     }
 
     if (url === '/api/blog-posts' && method === 'GET') {
-      const data = await storage.getBlogPosts();
-      return res.json(data);
+      try {
+        const data = await storage.getBlogPosts();
+        return res.json(data || []);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        return res.json([]); // Return empty array on error
+      }
     }
 
     if (url === '/api/stats' && method === 'GET') {
