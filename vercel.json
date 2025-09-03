@@ -16,6 +16,18 @@
   ],
   "routes": [
     {
+      "src": "/api/auth/login",
+      "dest": "/api/auth/login.js"
+    },
+    {
+      "src": "/api/auth/logout",
+      "dest": "/api/auth/logout.js"
+    },
+    {
+      "src": "/api/auth/me",
+      "dest": "/api/auth/me.js"
+    },
+    {
       "src": "/api/blog-posts",
       "dest": "/api/blog-posts.js"
     },

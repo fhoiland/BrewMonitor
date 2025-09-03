@@ -1,10 +1,25 @@
-// Simple blog generation endpoint for Vercel
+const jwt = require('jsonwebtoken');
+
+// Simple blog generation endpoint for Vercel with auth
 export default function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
+    // Check authentication
+    const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    try {
+      jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
     const { topic } = req.body;
     
     if (!topic) {
