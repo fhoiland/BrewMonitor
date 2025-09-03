@@ -1,8 +1,17 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // Simple login endpoint for Vercel
 export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -19,11 +28,21 @@ export default async function handler(req, res) {
         { expiresIn: '24h' }
       );
 
-      // Set HTTP-only cookie
-      res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=86400; Path=/`);
+      // Set cookie with proper settings for Vercel
+      const cookieOptions = [
+        `token=${token}`,
+        'HttpOnly',
+        'Path=/',
+        'Max-Age=86400',
+        'SameSite=None',
+        'Secure'
+      ];
+      
+      res.setHeader('Set-Cookie', cookieOptions.join('; '));
       
       return res.json({ 
         user: { id: 'admin', username: 'admin' },
+        token: token, // Also send token in response for debugging
         message: 'Login successful' 
       });
     }
