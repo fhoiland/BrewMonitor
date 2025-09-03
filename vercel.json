@@ -16,6 +16,22 @@
   ],
   "routes": [
     {
+      "src": "/api/blog-posts",
+      "dest": "/api/blog-posts.js"
+    },
+    {
+      "src": "/api/stats",
+      "dest": "/api/stats.js"
+    },
+    {
+      "src": "/api/brewing-data",
+      "dest": "/api/brewing-data.js"
+    },
+    {
+      "src": "/api/generate-blog",
+      "dest": "/api/generate-blog.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/[...path].js"
     },
