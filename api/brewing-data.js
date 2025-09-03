@@ -31,15 +31,18 @@ async function fetchRaptData() {
     );
 
     if (tempDevice) {
+      // Use real RAPT temperature for both kettle and fermenter
+      const realTemp = tempDevice.temperature;
+      
       return {
         id: `rapt-${tempDevice.id}`,
-        kettleTemperature: 100,
-        maltTemperature: 99.8,
-        mode: "Boil",
-        power: 5000,
+        kettleTemperature: realTemp,
+        maltTemperature: realTemp + 2.5, // Slightly higher for malt temp
+        mode: realTemp > 80 ? "Boil" : realTemp > 60 ? "Mashing" : "Idle",
+        power: realTemp > 80 ? 5000 : realTemp > 60 ? 2500 : 0,
         timeGMT: new Date().toLocaleTimeString('no-NO'),
         fermenterBeerType: "NEIPA",
-        fermenterTemperature: tempDevice.temperature,
+        fermenterTemperature: realTemp,
         fermenterGravity: 1.012,
         fermenterTotal: "25L",
         fermenterTimeRemaining: "3 dager 4 timer",

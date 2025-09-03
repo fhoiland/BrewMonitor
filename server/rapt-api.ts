@@ -221,7 +221,7 @@ class RaptApiService {
       maltTemperature: (actualTemp + 2.7) || 68.2,
       mode: telemetryData.state || "Mashing",
       power: telemetryData.heatingUtilisation || 75,
-      timeGmt: telemetryData.dateTime || new Date().toISOString(),
+      timeGMT: new Date().toLocaleTimeString('no-NO'),
       fermenterBeerType: "IPA",
       fermenterTemperature: actualTemp || 18.7,
       fermenterGravity: telemetryData.gravity || 1.045,
