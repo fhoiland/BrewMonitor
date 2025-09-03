@@ -75,17 +75,18 @@ export default function BlogForm({ initialData, postId, onSuccess }: BlogFormPro
   });
 
   const generateMutation = useMutation({
-    mutationFn: ({ topic, additionalContext }: { topic: string; additionalContext?: string }) =>
-      apiRequest("POST", "/api/admin/generate-blog-post", { topic, additionalContext }),
+    mutationFn: ({ topic }: { topic: string }) =>
+      apiRequest("POST", "/api/generate-blog", { topic }),
     onSuccess: async (response) => {
       const data = await response.json();
       form.setValue("title", data.title);
       form.setValue("summary", data.summary);
       form.setValue("content", data.content);
-      toast({ title: "AI-innhold generert!" });
+      toast({ title: "Innhold generert!" });
     },
-    onError: () => {
-      toast({ title: "Feil ved generering av AI-innhold", variant: "destructive" });
+    onError: (error) => {
+      console.error('Blog generation error:', error);
+      toast({ title: "Feil ved generering av innhold", variant: "destructive" });
     },
   });
 
